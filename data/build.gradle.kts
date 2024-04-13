@@ -1,11 +1,13 @@
 plugins {
     id("com.android.library")
     id("org.jetbrains.kotlin.android")
+    id("kotlin-kapt")
+    id("dagger.hilt.android.plugin")
 }
 
 android {
     namespace = "com.bendeng.data"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         minSdk = 24
@@ -24,20 +26,33 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "17"
     }
 }
 
 dependencies {
 
-    implementation("androidx.core:core-ktx:1.9.0")
-    implementation("androidx.appcompat:appcompat:1.6.1")
-    implementation("com.google.android.material:material:1.11.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.1.5")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    implementation(project(":domain"))
+
+
+    val hiltVersion = "2.48"
+    implementation("com.google.dagger:hilt-android:${hiltVersion}")
+    kapt("com.google.dagger:hilt-android-compiler:${hiltVersion}")
+
+
+    // retrofit
+    val retrofitVersion = "2.9.0"
+    api("com.squareup.retrofit2:retrofit:$retrofitVersion")
+    api("com.squareup.retrofit2:converter-gson:$retrofitVersion")
+
+    // okHttp
+    val okHttpVersion = "5.0.0-alpha.2"
+    api("com.squareup.okhttp3:okhttp:$okHttpVersion")
+    api("com.squareup.okhttp3:logging-interceptor:$okHttpVersion")
+    api("com.squareup.okhttp3:okhttp-urlconnection:$okHttpVersion")
+
 }
