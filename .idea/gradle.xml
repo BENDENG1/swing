@@ -8,6 +8,15 @@
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="gradleHome" value="$PROJECT_DIR$/../../../../Program Files/Android/Android Studio1/gradle-8.1.1-bin/gradle-8.1.1" />
         <option name="gradleJvm" value="jbr-17" />
+        <option name="modules">
+          <set>
+            <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/app" />
+            <option value="$PROJECT_DIR$/data" />
+            <option value="$PROJECT_DIR$/domain" />
+            <option value="$PROJECT_DIR$/presentation" />
+          </set>
+        </option>
       </GradleProjectSettings>
     </option>
   </component>

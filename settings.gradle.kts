@@ -15,4 +15,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "SwingProject"
 include(":app")
- 
+include(":data")
+include(":domain")
+include(":presentation")
