@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">presentation</string>
+    <string name="nav_feed">피드</string>
+    <string name="nav_favorite">즐겨찾기</string>
 </resources>
