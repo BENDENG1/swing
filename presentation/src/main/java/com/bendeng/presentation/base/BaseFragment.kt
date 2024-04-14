@@ -12,6 +12,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -20,6 +21,7 @@ abstract class BaseFragment<B : ViewDataBinding>(
 ) : Fragment() {
     private var _binding: B? = null
     protected val binding get() = _binding!!
+    private var currentSnackbar: Snackbar? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -53,4 +55,20 @@ abstract class BaseFragment<B : ViewDataBinding>(
     abstract fun initView()
 
     abstract fun initEventObserver()
+
+    fun showSnackBar(text: String, action: String? = null) {
+
+        currentSnackbar = Snackbar.make(
+            binding.root,
+            text,
+            Snackbar.LENGTH_LONG
+        ).apply {
+            action?.let {
+                setAction(it) {
+                    dismiss()
+                }
+            }
+            show()
+        }
+    }
 }
