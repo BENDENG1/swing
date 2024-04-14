@@ -17,6 +17,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
         buildConfigField("String", "UNPLASH_ID", getProperty("unplashId"))
+        buildConfigField("String", "UNPLASH_TOKEN", getProperty("unplashToken"))
     }
 
     buildTypes {

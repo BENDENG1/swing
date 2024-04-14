@@ -10,7 +10,7 @@ interface UnplashApi {
     companion object {
         const val BASE_URL = "https://api.unsplash.com/"
         const val AUTHORIZATION = "Authorization"
-        const val CLIENT_ID = "Client-ID"
+        const val BEARER = "Bearer"
     }
 
     @GET("search/photos")
