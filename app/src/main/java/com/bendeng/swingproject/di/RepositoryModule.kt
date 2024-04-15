@@ -1,11 +1,11 @@
 package com.bendeng.swingproject.di
 
+import com.bendeng.data.repository.UnplashRepositoryImpl
 import com.bendeng.domain.repository.UnplashRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import repository.UnplashRepositoryImpl
 import javax.inject.Singleton
 
 @Module

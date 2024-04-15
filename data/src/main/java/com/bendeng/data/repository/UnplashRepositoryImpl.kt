@@ -1,4 +1,4 @@
-package repository
+package com.bendeng.data.repository
 
 
 import com.bendeng.data.model.response.SearchPhotoResponse.Companion.toDomainModel
