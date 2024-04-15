@@ -11,24 +11,13 @@ import dagger.hilt.android.AndroidEntryPoint
 class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
 
     private val viewModel: FeedViewModel by viewModels()
-    private val adapter = SearchPhotoAdapter()
+
 
     override fun initView() {
         with(binding) {
             vm = viewModel
-            rvFeedPhoto.adapter = adapter
-            rvFeedPhoto.animation = null
-            rvFeedPhoto.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-                override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                    super.onScrolled(recyclerView, dx, dy)
-                    val scrollBottom = !rvFeedPhoto.canScrollVertically(1)
-                    val isNotLoading = !viewModel.uiState.value.isLoading
-                    if (scrollBottom && isNotLoading) {
-                        viewModel.loadNextPhotos()
-                    }
-                }
-            })
             tietInputSearch.requestFocus()
+            initAdapter()
         }
     }
 
@@ -40,6 +29,27 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
                 }
             }
         }
+    }
+
+    private fun FragmentFeedBinding.initAdapter() {
+        rvFeedPhoto.adapter = SearchPhotoAdapter(object : PhotoClickListener {
+            override fun onClick(id: String) {}
+
+            override fun onLikeClick(id: String, isLike: Boolean) {
+                viewModel.modifyLikePhoto(id, isLike)
+            }
+        })
+        rvFeedPhoto.animation = null
+        rvFeedPhoto.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val scrollBottom = !rvFeedPhoto.canScrollVertically(1)
+                val isNotLoading = !viewModel.uiState.value.isLoading
+                if (scrollBottom && isNotLoading) {
+                    viewModel.loadNextPhotos()
+                }
+            }
+        })
     }
 
 }

@@ -2,7 +2,7 @@ package com.bendeng.presentation.ui.feed
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bendeng.domain.model.SearchPhotoInfoData
+import com.bendeng.domain.model.PhotoInfoData
 import com.bendeng.domain.model.base.BaseState
 import com.bendeng.domain.repository.UnplashRepository
 import com.bendeng.presentation.util.Constants.NETWORK_ERROR
@@ -26,7 +26,7 @@ import javax.inject.Inject
 data class FeedUiState(
     val page: Int = 1,
     val totalPage: Int = 0,
-    val photoList: List<SearchPhotoInfoData> = emptyList(),
+    val photoList: List<PhotoInfoData> = emptyList(),
     val isLoading: Boolean = false,
 )
 
@@ -52,18 +52,19 @@ class FeedViewModel @Inject constructor(
     val events: SharedFlow<FeedEvents> = _events.asSharedFlow()
 
     fun loadPhotos() {
-        _uiState.update { it.copy(page = 1, isLoading = true) }
-        unplashRepository.getSearchPicture(query.value, 1).onEach { state ->
+        _uiState.update { it.copy(isLoading = true) }
+        unplashRepository.getSearchPicture(query.value, FIRST_PAGE, PER_PAGE).onEach { state ->
             when (state) {
                 is BaseState.Success -> {
                     val item = state.data
-                    if (item.searchPhotoInfo.isEmpty()) {
+                    if (item.photoInfo.isEmpty()) {
                         _events.emit(FeedEvents.ShowSnackMessage(SEARCH_EMPTY))
                     } else {
                         _uiState.update { ui ->
                             ui.copy(
+                                page = FIRST_PAGE,
                                 totalPage = item.totalPages,
-                                photoList = item.searchPhotoInfo,
+                                photoList = item.photoInfo,
                                 isLoading = false
                             )
                         }
@@ -80,32 +81,95 @@ class FeedViewModel @Inject constructor(
     fun loadNextPhotos() {
         if (uiState.value.page < uiState.value.totalPage) {
             _uiState.update { it.copy(page = uiState.value.page + 1, isLoading = true) }
-            unplashRepository.getSearchPicture(query.value, uiState.value.page).onEach { state ->
-                when (state) {
-                    is BaseState.Success -> {
-                        val item = state.data
-                        _uiState.update { ui ->
-                            val updatedList = ui.photoList.toMutableList().apply {
-                                addAll(item.searchPhotoInfo)
+            unplashRepository.getSearchPicture(query.value, uiState.value.page, PER_PAGE)
+                .onEach { state ->
+                    when (state) {
+                        is BaseState.Success -> {
+                            val item = state.data
+                            _uiState.update { ui ->
+                                val updatedList = ui.photoList.toMutableList().apply {
+                                    addAll(item.photoInfo)
+                                }
+                                ui.copy(
+                                    photoList = updatedList,
+                                    totalPage = item.totalPages,
+                                    isLoading = false
+                                )
                             }
-                            ui.copy(
-                                photoList = updatedList,
-                                totalPage = item.totalPages,
-                                isLoading = false
-                            )
+                        }
+
+                        is BaseState.Error -> {
+                            _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
                         }
                     }
-
-                    is BaseState.Error -> {
-                        _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
-                    }
-                }
-            }.launchIn(viewModelScope)
+                }.launchIn(viewModelScope)
         } else {
             viewModelScope.launch {
                 _events.emit(FeedEvents.ShowSnackMessage(SEARCH_LAST))
             }
         }
+    }
+
+    fun modifyLikePhoto(id: String, isLike: Boolean) {
+        when (isLike) {
+            true -> unlikePhoto(id)
+            false -> likePhoto(id)
+        }
+    }
+
+    private fun likePhoto(id: String) {
+        unplashRepository.postLikePicture(id).onEach { state ->
+            when (state) {
+                is BaseState.Success -> {
+                    _uiState.update { ui ->
+                        val updatedPhotoList = uiState.value.photoList.map { photo ->
+                            if (photo.id == id) {
+                                photo.copy(isLike = true)
+                            } else {
+                                photo
+                            }
+                        }
+                        ui.copy(
+                            photoList = updatedPhotoList
+                        )
+                    }
+                }
+
+                is BaseState.Error -> {
+                    _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    private fun unlikePhoto(id: String) {
+        unplashRepository.deleteLikePicture(id).onEach { state ->
+            when (state) {
+                is BaseState.Success -> {
+                    _uiState.update { ui ->
+                        val updatedPhotoList = uiState.value.photoList.map { photo ->
+                            if (photo.id == id) {
+                                photo.copy(isLike = false)
+                            } else {
+                                photo
+                            }
+                        }
+                        ui.copy(
+                            photoList = updatedPhotoList
+                        )
+                    }
+                }
+
+                is BaseState.Error -> {
+                    _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    companion object {
+        const val FIRST_PAGE = 1
+        const val PER_PAGE = 30
     }
 
 }

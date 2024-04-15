@@ -6,7 +6,7 @@
     <data>
         <variable
             name="item"
-            type="com.bendeng.domain.model.SearchPhotoInfoData" />
+            type="com.bendeng.domain.model.PhotoInfoData" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -39,7 +39,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="4dp"
                 android:adjustViewBounds="true"
-                android:src="@drawable/ic_unfill_like"
+                android:src="@{item.isLike ? @drawable/ic_fill_like : @drawable/ic_unfill_like}"
                 android:layout_gravity="end" />
 
 
