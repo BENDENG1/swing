@@ -7,6 +7,7 @@ import com.bendeng.data.model.response.UnLikePhotoResponse.Companion.toDomainMod
 import com.bendeng.data.model.runRemote
 import com.bendeng.data.remote.UnplashApi
 import com.bendeng.domain.model.LikePhotoData
+import com.bendeng.domain.model.PhotoInfoData
 import com.bendeng.domain.model.SearchPhotoData
 import com.bendeng.domain.model.UnLikePhotoData
 import com.bendeng.domain.model.base.BaseState
@@ -19,7 +20,11 @@ class UnplashRepositoryImpl @Inject constructor(
     private val api: UnplashApi
 ) : UnplashRepository {
 
-    override fun getSearchPicture(query: String, page: Int, perPage : Int): Flow<BaseState<SearchPhotoData>> =
+    override fun getSearchPicture(
+        query: String,
+        page: Int,
+        perPage: Int
+    ): Flow<BaseState<SearchPhotoData>> =
         flow {
             when (val result = runRemote { api.getSearchPhotos(query, page, perPage) }) {
                 is BaseState.Success -> {
@@ -48,6 +53,21 @@ class UnplashRepositoryImpl @Inject constructor(
         when (val result = runRemote { api.deleteUnlikePhoto(id = id) }) {
             is BaseState.Success -> {
                 emit(BaseState.Success(result.data.toDomainModel()))
+            }
+
+            is BaseState.Error -> {
+                emit(result)
+            }
+        }
+    }
+
+    override fun getUserLikePicture(
+        page: Int,
+        perPage: Int
+    ): Flow<BaseState<List<PhotoInfoData>>> = flow {
+        when (val result = runRemote { api.getLikePhotos(page = page, perPage = perPage) }) {
+            is BaseState.Success -> {
+                emit(BaseState.Success(result.data.map { it.toDomainModel() }))
             }
 
             is BaseState.Error -> {
