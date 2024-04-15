@@ -1,8 +1,13 @@
 package com.bendeng.data.remote
 
+import com.bendeng.data.model.response.LikePhotoResponse
 import com.bendeng.data.model.response.SearchPhotoResponse
+import com.bendeng.data.model.response.UnLikePhotoResponse
 import retrofit2.Response
+import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface UnplashApi {
@@ -17,6 +22,16 @@ interface UnplashApi {
     suspend fun getSearchPhotos(
         @Query("query") query: String,
         @Query("page") page: Int,
-        @Query("per_page") perPage: Int? = 30
+        @Query("per_page") perPage: Int?
     ): Response<SearchPhotoResponse>
+
+    @POST("photos/{id}/like")
+    suspend fun postLikePhoto(
+        @Path("id") id: String
+    ): Response<LikePhotoResponse>
+
+    @DELETE("photos/{id}/like")
+    suspend fun deleteUnlikePhoto(
+        @Path("id") id: String
+    ): Response<UnLikePhotoResponse>
 }
