@@ -1,6 +1,7 @@
 package com.bendeng.data.remote
 
 import com.bendeng.data.model.response.LikePhotoResponse
+import com.bendeng.data.model.response.PhotoInfo
 import com.bendeng.data.model.response.SearchPhotoResponse
 import com.bendeng.data.model.response.UnLikePhotoResponse
 import retrofit2.Response
@@ -16,6 +17,7 @@ interface UnplashApi {
         const val BASE_URL = "https://api.unsplash.com/"
         const val AUTHORIZATION = "Authorization"
         const val BEARER = "Bearer"
+        const val GYROH_ID = "gyroh"
     }
 
     @GET("search/photos")
@@ -34,4 +36,11 @@ interface UnplashApi {
     suspend fun deleteUnlikePhoto(
         @Path("id") id: String
     ): Response<UnLikePhotoResponse>
+
+    @GET("users/{id}/likes")
+    suspend fun getLikePhotos(
+        @Path("id") id : String = GYROH_ID,
+        @Query("page") page : Int,
+        @Query("per_page") perPage : Int
+    ) : Response<List<PhotoInfo>>
 }

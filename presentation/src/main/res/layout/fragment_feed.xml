@@ -6,7 +6,7 @@
     <data>
         <variable
             name="vm"
-            type="com.bendeng.presentation.ui.feed.FeedViewModel" />
+            type="com.bendeng.presentation.ui.MainSharedViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -18,21 +18,21 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_begin="8dp" />
+            app:layout_constraintGuide_begin="16dp" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/gl_end"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            app:layout_constraintGuide_end="8dp" />
+            app:layout_constraintGuide_end="16dp" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/gl_top"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            app:layout_constraintGuide_begin="8dp" />
+            app:layout_constraintGuide_begin="16dp" />
 
         <View
             android:id="@+id/v_search"
@@ -73,12 +73,12 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rv_feed_photo"
-            list="@{vm.uiState.photoList}"
+            list="@{vm.feedUiState.photoList}"
             android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_marginTop="16dp"
             android:orientation="vertical"
-            app:layoutManager="androidx.recyclerview.widget.StaggeredGridLayoutManager"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:spanCount="2"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@id/gl_end"
