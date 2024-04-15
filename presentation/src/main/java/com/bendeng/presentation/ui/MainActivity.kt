@@ -2,6 +2,7 @@ package com.bendeng.presentation.ui
 
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.viewModels
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
@@ -14,6 +15,8 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::inflate) {
     private lateinit var navHostFragment: NavHostFragment
     private lateinit var navController: NavController
+
+    private val viewModel: MainSharedViewModel by viewModels()
 
     override fun initView() {
         setNavigationController()
@@ -28,7 +31,13 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
             supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
 
-        binding.bnvNavBar.setupWithNavController(navController)
+        with(binding) {
+            bnvNavBar.setupWithNavController(navController)
+            bnvNavBar.setOnItemReselectedListener { menuItem ->
+                //TODO : 맨위 스크롤 가게 하기 설정
+                // enum으로 그게 맞다면 그것에 대한 맨위로 올리게 하기
+            }
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {

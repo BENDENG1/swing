@@ -1,7 +1,9 @@
 package com.bendeng.presentation.ui.feed
 
-import androidx.fragment.app.viewModels
+import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.RecyclerView
+import com.bendeng.presentation.ui.FeedEvents
+import com.bendeng.presentation.ui.MainSharedViewModel
 import com.bendeng.presentation.R
 import com.bendeng.presentation.base.BaseFragment
 import com.bendeng.presentation.databinding.FragmentFeedBinding
@@ -10,7 +12,7 @@ import dagger.hilt.android.AndroidEntryPoint
 @AndroidEntryPoint
 class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
 
-    private val viewModel: FeedViewModel by viewModels()
+    private val viewModel: MainSharedViewModel by activityViewModels()
 
 
     override fun initView() {
@@ -23,9 +25,10 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
 
     override fun initEventObserver() {
         repeatOnStarted {
-            viewModel.events.collect { event ->
+            viewModel.feedEvents.collect { event ->
                 when (event) {
                     is FeedEvents.ShowSnackMessage -> showSnackBar(event.msg)
+                    is FeedEvents.ScrollToTop -> binding.rvFeedPhoto.scrollToPosition(0)
                 }
             }
         }
@@ -44,7 +47,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 super.onScrolled(recyclerView, dx, dy)
                 val scrollBottom = !rvFeedPhoto.canScrollVertically(1)
-                val isNotLoading = !viewModel.uiState.value.isLoading
+                val isNotLoading = !viewModel.feedUiState.value.isLoading
                 if (scrollBottom && isNotLoading) {
                     viewModel.loadNextPhotos()
                 }

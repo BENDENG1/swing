@@ -1,11 +1,10 @@
-package com.bendeng.presentation.ui.feed
+package com.bendeng.presentation.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bendeng.domain.model.PhotoInfoData
 import com.bendeng.domain.model.base.BaseState
 import com.bendeng.domain.repository.UnplashRepository
-import com.bendeng.presentation.util.Constants.NETWORK_ERROR
 import com.bendeng.presentation.util.Constants.SEARCH_EMPTY
 import com.bendeng.presentation.util.Constants.SEARCH_LAST
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -30,37 +29,57 @@ data class FeedUiState(
     val isLoading: Boolean = false,
 )
 
+data class FavoriteUiState(
+    val photoList: List<PhotoInfoData> = emptyList()
+)
+
 sealed class FeedEvents {
     data class ShowSnackMessage(val msg: String) : FeedEvents()
+    data object ScrollToTop : FeedEvents()
+}
+
+sealed class FavoriteEvents {
+    data class ShowSnackMessage(val msg: String) : FavoriteEvents()
+    data object ScrollToTop : FavoriteEvents()
 }
 
 @HiltViewModel
-class FeedViewModel @Inject constructor(
+class MainSharedViewModel @Inject constructor(
     private val unplashRepository: UnplashRepository
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(FeedUiState())
-    val uiState: StateFlow<FeedUiState> = _uiState.asStateFlow()
+    private val _feedUiState = MutableStateFlow(FeedUiState())
+    val feedUiState: StateFlow<FeedUiState> = _feedUiState.asStateFlow()
+
+    private val _favoriteUiState = MutableStateFlow(FavoriteUiState())
+    val favoriteUiState: StateFlow<FavoriteUiState> = _favoriteUiState.asStateFlow()
 
     val query = MutableStateFlow("")
 
-    private val _events = MutableSharedFlow<FeedEvents>(
+    private val _feedEvents = MutableSharedFlow<FeedEvents>(
         replay = 0,
         extraBufferCapacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
-    val events: SharedFlow<FeedEvents> = _events.asSharedFlow()
+    val feedEvents: SharedFlow<FeedEvents> = _feedEvents.asSharedFlow()
+
+    private val _favoriteEvents = MutableSharedFlow<FavoriteEvents>(
+        replay = 0,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val favoriteEvents: SharedFlow<FavoriteEvents> = _favoriteEvents.asSharedFlow()
 
     fun loadPhotos() {
-        _uiState.update { it.copy(isLoading = true) }
+        _feedUiState.update { it.copy(isLoading = true) }
         unplashRepository.getSearchPicture(query.value, FIRST_PAGE, PER_PAGE).onEach { state ->
             when (state) {
                 is BaseState.Success -> {
                     val item = state.data
                     if (item.photoInfo.isEmpty()) {
-                        _events.emit(FeedEvents.ShowSnackMessage(SEARCH_EMPTY))
+                        _feedEvents.emit(FeedEvents.ShowSnackMessage(SEARCH_EMPTY))
                     } else {
-                        _uiState.update { ui ->
+                        _feedUiState.update { ui ->
                             ui.copy(
                                 page = FIRST_PAGE,
                                 totalPage = item.totalPages,
@@ -72,21 +91,21 @@ class FeedViewModel @Inject constructor(
                 }
 
                 is BaseState.Error -> {
-                    _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                    _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
                 }
             }
         }.launchIn(viewModelScope)
     }
 
     fun loadNextPhotos() {
-        if (uiState.value.page < uiState.value.totalPage) {
-            _uiState.update { it.copy(page = uiState.value.page + 1, isLoading = true) }
-            unplashRepository.getSearchPicture(query.value, uiState.value.page, PER_PAGE)
+        if (feedUiState.value.page < feedUiState.value.totalPage) {
+            _feedUiState.update { it.copy(page = feedUiState.value.page + 1, isLoading = true) }
+            unplashRepository.getSearchPicture(query.value, feedUiState.value.page, PER_PAGE)
                 .onEach { state ->
                     when (state) {
                         is BaseState.Success -> {
                             val item = state.data
-                            _uiState.update { ui ->
+                            _feedUiState.update { ui ->
                                 val updatedList = ui.photoList.toMutableList().apply {
                                     addAll(item.photoInfo)
                                 }
@@ -99,13 +118,13 @@ class FeedViewModel @Inject constructor(
                         }
 
                         is BaseState.Error -> {
-                            _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                            _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
                         }
                     }
                 }.launchIn(viewModelScope)
         } else {
             viewModelScope.launch {
-                _events.emit(FeedEvents.ShowSnackMessage(SEARCH_LAST))
+                _feedEvents.emit(FeedEvents.ShowSnackMessage(SEARCH_LAST))
             }
         }
     }
@@ -121,8 +140,8 @@ class FeedViewModel @Inject constructor(
         unplashRepository.postLikePicture(id).onEach { state ->
             when (state) {
                 is BaseState.Success -> {
-                    _uiState.update { ui ->
-                        val updatedPhotoList = uiState.value.photoList.map { photo ->
+                    _feedUiState.update { ui ->
+                        val updatedPhotoList = feedUiState.value.photoList.map { photo ->
                             if (photo.id == id) {
                                 photo.copy(isLike = true)
                             } else {
@@ -136,7 +155,7 @@ class FeedViewModel @Inject constructor(
                 }
 
                 is BaseState.Error -> {
-                    _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                    _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
                 }
             }
         }.launchIn(viewModelScope)
@@ -146,8 +165,8 @@ class FeedViewModel @Inject constructor(
         unplashRepository.deleteLikePicture(id).onEach { state ->
             when (state) {
                 is BaseState.Success -> {
-                    _uiState.update { ui ->
-                        val updatedPhotoList = uiState.value.photoList.map { photo ->
+                    _feedUiState.update { ui ->
+                        val updatedPhotoList = feedUiState.value.photoList.map { photo ->
                             if (photo.id == id) {
                                 photo.copy(isLike = false)
                             } else {
@@ -158,10 +177,33 @@ class FeedViewModel @Inject constructor(
                             photoList = updatedPhotoList
                         )
                     }
+                    _favoriteUiState.update { ui ->
+                        val updatedLikeList =
+                            favoriteUiState.value.photoList.filterNot { it.id == id }
+                        ui.copy(photoList = updatedLikeList)
+                    }
                 }
 
                 is BaseState.Error -> {
-                    _events.emit(FeedEvents.ShowSnackMessage(NETWORK_ERROR))
+                    _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
+                }
+            }
+        }.launchIn(viewModelScope)
+    }
+
+    fun getLikePhotos() {
+        unplashRepository.getUserLikePicture(FIRST_PAGE, PER_PAGE).onEach { state ->
+            when (state) {
+                is BaseState.Success -> {
+                    _favoriteUiState.update { ui ->
+                        ui.copy(
+                            photoList = state.data
+                        )
+                    }
+                }
+
+                is BaseState.Error -> {
+                    _favoriteEvents.emit(FavoriteEvents.ShowSnackMessage(state.message))
                 }
             }
         }.launchIn(viewModelScope)
