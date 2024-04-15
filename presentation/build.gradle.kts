@@ -58,4 +58,8 @@ dependencies {
     val hiltVersion = "2.48"
     implementation("com.google.dagger:hilt-android:${hiltVersion}")
     kapt("com.google.dagger:hilt-android-compiler:${hiltVersion}")
+
+    // glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
 }
