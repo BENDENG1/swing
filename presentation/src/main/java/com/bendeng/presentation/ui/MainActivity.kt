@@ -9,6 +9,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.bendeng.presentation.R
 import com.bendeng.presentation.base.BaseActivity
 import com.bendeng.presentation.databinding.ActivityMainBinding
+import com.bendeng.presentation.util.Constants
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -34,8 +35,19 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
         with(binding) {
             bnvNavBar.setupWithNavController(navController)
             bnvNavBar.setOnItemReselectedListener { menuItem ->
-                //TODO : 맨위 스크롤 가게 하기 설정
-                // enum으로 그게 맞다면 그것에 대한 맨위로 올리게 하기
+                when (menuItem.itemId) {
+                    R.id.feedFragment -> {
+                        viewModel.scrollUp(Constants.FRAGMENT.FEED)
+                    }
+
+                    R.id.favoriteFragment -> {
+                        viewModel.scrollUp(Constants.FRAGMENT.FAVORITE)
+                    }
+
+                    else -> {
+                        Constants.FRAGMENT.NOTHING
+                    }
+                }
             }
         }
     }
@@ -46,4 +58,6 @@ class MainActivity : BaseActivity<ActivityMainBinding>(ActivityMainBinding::infl
         imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
         return super.dispatchTouchEvent(ev)
     }
+
+
 }

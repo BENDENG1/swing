@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.bendeng.domain.model.PhotoInfoData
 import com.bendeng.domain.model.base.BaseState
 import com.bendeng.domain.repository.UnplashRepository
+import com.bendeng.presentation.util.Constants
 import com.bendeng.presentation.util.Constants.SEARCH_EMPTY
 import com.bendeng.presentation.util.Constants.SEARCH_LAST
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -207,6 +208,24 @@ class MainSharedViewModel @Inject constructor(
                 }
             }
         }.launchIn(viewModelScope)
+    }
+
+    fun scrollUp(bottomNav: Constants.FRAGMENT) {
+        when (bottomNav) {
+            Constants.FRAGMENT.FEED -> {
+                viewModelScope.launch {
+                    _feedEvents.emit(FeedEvents.ScrollToTop)
+                }
+            }
+
+            Constants.FRAGMENT.FAVORITE -> {
+                viewModelScope.launch {
+                    _favoriteEvents.emit(FavoriteEvents.ScrollToTop)
+                }
+            }
+
+            else -> {}
+        }
     }
 
     companion object {
