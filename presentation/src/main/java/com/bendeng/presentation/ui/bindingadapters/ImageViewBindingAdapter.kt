@@ -11,6 +11,7 @@ fun bindLoadImage(view: ImageView, imageUrl: String) {
     if (imageUrl.isNotBlank()) {
         Glide.with(view.context)
             .load(imageUrl)
+            .placeholder(R.drawable.ic_image_empty)
             .apply(RequestOptions.fitCenterTransform())
             .error(R.drawable.ic_image_fail)
             .into(view)
