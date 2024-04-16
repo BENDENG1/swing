@@ -1,13 +1,14 @@
 package com.bendeng.presentation.ui.feed
 
+import android.view.inputmethod.EditorInfo
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.RecyclerView
-import com.bendeng.presentation.ui.FeedEvents
-import com.bendeng.presentation.ui.MainSharedViewModel
 import com.bendeng.presentation.R
 import com.bendeng.presentation.base.BaseFragment
 import com.bendeng.presentation.databinding.FragmentFeedBinding
 import com.bendeng.presentation.ui.CommonEvents
+import com.bendeng.presentation.ui.FeedEvents
+import com.bendeng.presentation.ui.MainSharedViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -19,7 +20,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
     override fun initView() {
         with(binding) {
             vm = viewModel
-            tietInputSearch.requestFocus()
+            searchInput()
             initAdapter()
         }
     }
@@ -35,7 +36,7 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
         }
         repeatOnStarted {
             viewModel.commonEvents.collect { event ->
-                when(event) {
+                when (event) {
                     is CommonEvents.ShowLoading -> showLoading(requireContext())
                     is CommonEvents.DismissLoading -> dismissLoading()
                 }
@@ -62,6 +63,18 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
                 }
             }
         })
+    }
+
+    private fun FragmentFeedBinding.searchInput() {
+        tietInputSearch.requestFocus()
+        tietInputSearch.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                viewModel.loadPhotos()
+                true
+            } else {
+                false
+            }
+        }
     }
 
 }

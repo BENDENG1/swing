@@ -218,12 +218,7 @@ class MainSharedViewModel @Inject constructor(
         }.launchIn(viewModelScope)
     }
 
-    /**
-     * api 통신 횟수 50회 제한으로 인해 초기 비어있을때만 통신하는걸로 설정
-     */
     fun getLikePhotos() {
-        if(favoriteUiState.value.photoList.isEmpty())
-            return
         unplashRepository.getUserLikePicture(FIRST_PAGE, PER_PAGE)
             .onStart {
                 _commonEvents.emit(CommonEvents.ShowLoading)
