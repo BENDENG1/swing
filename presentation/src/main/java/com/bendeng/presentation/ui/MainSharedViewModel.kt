@@ -17,7 +17,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -33,6 +35,11 @@ data class FeedUiState(
 data class FavoriteUiState(
     val photoList: List<PhotoInfoData> = emptyList()
 )
+
+sealed class CommonEvents {
+    data object ShowLoading : CommonEvents()
+    data object DismissLoading : CommonEvents()
+}
 
 sealed class FeedEvents {
     data class ShowSnackMessage(val msg: String) : FeedEvents()
@@ -57,6 +64,13 @@ class MainSharedViewModel @Inject constructor(
 
     val query = MutableStateFlow("")
 
+    private val _commonEvents = MutableSharedFlow<CommonEvents>(
+        replay = 1,
+        extraBufferCapacity = 1,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    )
+    val commonEvents: SharedFlow<CommonEvents> = _commonEvents.asSharedFlow()
+
     private val _feedEvents = MutableSharedFlow<FeedEvents>(
         replay = 0,
         extraBufferCapacity = 1,
@@ -73,35 +87,44 @@ class MainSharedViewModel @Inject constructor(
 
     fun loadPhotos() {
         _feedUiState.update { it.copy(isLoading = true) }
-        unplashRepository.getSearchPicture(query.value, FIRST_PAGE, PER_PAGE).onEach { state ->
-            when (state) {
-                is BaseState.Success -> {
-                    val item = state.data
-                    if (item.photoInfo.isEmpty()) {
-                        _feedEvents.emit(FeedEvents.ShowSnackMessage(SEARCH_EMPTY))
-                    } else {
-                        _feedUiState.update { ui ->
-                            ui.copy(
-                                page = FIRST_PAGE,
-                                totalPage = item.totalPages,
-                                photoList = item.photoInfo,
-                                isLoading = false
-                            )
+        unplashRepository.getSearchPicture(query.value, FIRST_PAGE, PER_PAGE)
+            .onStart {
+                _commonEvents.emit(CommonEvents.ShowLoading)
+            }
+            .onEach { state ->
+                when (state) {
+                    is BaseState.Success -> {
+                        val item = state.data
+                        if (item.photoInfo.isEmpty()) {
+                            _feedEvents.emit(FeedEvents.ShowSnackMessage(SEARCH_EMPTY))
+                        } else {
+                            _feedUiState.update { ui ->
+                                ui.copy(
+                                    page = FIRST_PAGE,
+                                    totalPage = item.totalPages,
+                                    photoList = item.photoInfo,
+                                    isLoading = false
+                                )
+                            }
                         }
                     }
-                }
 
-                is BaseState.Error -> {
-                    _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
+                    is BaseState.Error -> {
+                        _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
+                    }
                 }
-            }
-        }.launchIn(viewModelScope)
+            }.onCompletion {
+                _commonEvents.emit(CommonEvents.DismissLoading)
+            }.launchIn(viewModelScope)
     }
 
     fun loadNextPhotos() {
         if (feedUiState.value.page < feedUiState.value.totalPage) {
             _feedUiState.update { it.copy(page = feedUiState.value.page + 1, isLoading = true) }
             unplashRepository.getSearchPicture(query.value, feedUiState.value.page, PER_PAGE)
+                .onStart {
+                    _commonEvents.emit(CommonEvents.ShowLoading)
+                }
                 .onEach { state ->
                     when (state) {
                         is BaseState.Success -> {
@@ -122,6 +145,9 @@ class MainSharedViewModel @Inject constructor(
                             _feedEvents.emit(FeedEvents.ShowSnackMessage(state.message))
                         }
                     }
+                }
+                .onCompletion {
+                    _commonEvents.emit(CommonEvents.DismissLoading)
                 }.launchIn(viewModelScope)
         } else {
             viewModelScope.launch {
@@ -193,21 +219,27 @@ class MainSharedViewModel @Inject constructor(
     }
 
     fun getLikePhotos() {
-        unplashRepository.getUserLikePicture(FIRST_PAGE, PER_PAGE).onEach { state ->
-            when (state) {
-                is BaseState.Success -> {
-                    _favoriteUiState.update { ui ->
-                        ui.copy(
-                            photoList = state.data
-                        )
+        unplashRepository.getUserLikePicture(FIRST_PAGE, PER_PAGE)
+            .onStart {
+                _commonEvents.emit(CommonEvents.ShowLoading)
+            }
+            .onEach { state ->
+                when (state) {
+                    is BaseState.Success -> {
+                        _favoriteUiState.update { ui ->
+                            ui.copy(
+                                photoList = state.data
+                            )
+                        }
+                    }
+
+                    is BaseState.Error -> {
+                        _favoriteEvents.emit(FavoriteEvents.ShowSnackMessage(state.message))
                     }
                 }
-
-                is BaseState.Error -> {
-                    _favoriteEvents.emit(FavoriteEvents.ShowSnackMessage(state.message))
-                }
-            }
-        }.launchIn(viewModelScope)
+            }.onCompletion {
+                _commonEvents.emit(CommonEvents.DismissLoading)
+            }.launchIn(viewModelScope)
     }
 
     fun scrollUp(bottomNav: Constants.FRAGMENT) {

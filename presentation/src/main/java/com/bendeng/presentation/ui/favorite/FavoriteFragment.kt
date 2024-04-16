@@ -4,6 +4,7 @@ import androidx.fragment.app.activityViewModels
 import com.bendeng.presentation.R
 import com.bendeng.presentation.base.BaseFragment
 import com.bendeng.presentation.databinding.FragmentFavoriteBinding
+import com.bendeng.presentation.ui.CommonEvents
 import com.bendeng.presentation.ui.FavoriteEvents
 import com.bendeng.presentation.ui.MainSharedViewModel
 import com.bendeng.presentation.ui.feed.PhotoClickListener
@@ -29,6 +30,14 @@ class FavoriteFragment : BaseFragment<FragmentFavoriteBinding>(R.layout.fragment
                 when (event) {
                     is FavoriteEvents.ShowSnackMessage -> showSnackBar(event.msg)
                     is FavoriteEvents.ScrollToTop -> binding.rvFavorite.scrollToPosition(0)
+                }
+            }
+        }
+        repeatOnStarted {
+            viewModel.commonEvents.collect { event ->
+                when (event) {
+                    is CommonEvents.ShowLoading -> showLoading(requireContext())
+                    is CommonEvents.DismissLoading -> dismissLoading()
                 }
             }
         }

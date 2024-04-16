@@ -1,5 +1,6 @@
 package com.bendeng.presentation.base
 
+import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -12,6 +13,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import com.bendeng.presentation.ui.customview.LoadingDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -22,6 +24,9 @@ abstract class BaseFragment<B : ViewDataBinding>(
     private var _binding: B? = null
     protected val binding get() = _binding!!
     private var currentSnackbar: Snackbar? = null
+
+    private lateinit var loadingDialog: LoadingDialog
+    private var loadingState = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -69,6 +74,21 @@ abstract class BaseFragment<B : ViewDataBinding>(
                 }
             }
             show()
+        }
+    }
+
+    fun showLoading(context: Context) {
+        if (!loadingState) {
+            loadingDialog = LoadingDialog(context)
+            loadingDialog.show()
+            loadingState = true
+        }
+    }
+
+    fun dismissLoading() {
+        if (loadingState) {
+            loadingDialog.dismiss()
+            loadingState = false
         }
     }
 }

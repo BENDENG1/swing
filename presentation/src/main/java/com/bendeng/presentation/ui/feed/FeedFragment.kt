@@ -7,6 +7,7 @@ import com.bendeng.presentation.ui.MainSharedViewModel
 import com.bendeng.presentation.R
 import com.bendeng.presentation.base.BaseFragment
 import com.bendeng.presentation.databinding.FragmentFeedBinding
+import com.bendeng.presentation.ui.CommonEvents
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -29,6 +30,14 @@ class FeedFragment : BaseFragment<FragmentFeedBinding>(R.layout.fragment_feed) {
                 when (event) {
                     is FeedEvents.ShowSnackMessage -> showSnackBar(event.msg)
                     is FeedEvents.ScrollToTop -> binding.rvFeedPhoto.scrollToPosition(0)
+                }
+            }
+        }
+        repeatOnStarted {
+            viewModel.commonEvents.collect { event ->
+                when(event) {
+                    is CommonEvents.ShowLoading -> showLoading(requireContext())
+                    is CommonEvents.DismissLoading -> dismissLoading()
                 }
             }
         }
