@@ -3,4 +3,5 @@
     <string name="nav_feed">피드</string>
     <string name="nav_favorite">즐겨찾기</string>
     <string name="feed_search_image">검색하시고 싶은 이미지를 입력하세요</string>
+    <string name="dialog_loading">로딩 중</string>
 </resources>
